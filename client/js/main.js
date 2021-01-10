@@ -81,4 +81,4 @@ async function userLoad () {
     });
 })();
 
-export { $, drawMap, socket, images };
+export { $, drawMap, socket, images, spriteSize };
