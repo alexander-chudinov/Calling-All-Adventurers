@@ -32,7 +32,7 @@
     - x
     - y
 - spawnEnemy (server only, happens once every X seconds)
-    - updateEnemies (arrow of:)
+    - updateEnemies (array of:)
         - spriteID
         - x
         - y
