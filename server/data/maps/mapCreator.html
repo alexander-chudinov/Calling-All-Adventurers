@@ -1,0 +1,137 @@
+<html>
+    <head>
+        <style>
+            body{
+                margin: 0;
+                padding: 0;
+            }
+            #assetPicker, #map{
+                width: 100%;
+                text-align: center;
+            }
+            .itemRow, .placeholderRow{
+                width:100%;
+                float: left;
+            }
+            .item:active, .placeholder:active{
+                background:#f3ff0b;
+                user-select: none;
+            }
+            .placeholder{
+                border:1px solid #dadada;
+                padding:2px;
+            }
+            .placeholder{
+                width:16px;
+                height:16px;
+                float:left;
+                background: white;
+            }
+            .invisible{
+                display: none;
+            }
+
+        </style>
+    </head>
+    <body>
+
+        <div id="map"></div>
+        <button onclick="saveMap()">Generate Map JSON</button>
+        <div id="assetPicker"></div>
+
+        <script>
+            let activeItemID = 0;
+            let activeIcon = null;
+
+            let saveMap = () => {
+                let mapMatrix = []
+                let map = document.getElementById("map")
+                for(let mapRow of map.children){
+                    let matrixRow = []
+                    for(let mapTile of mapRow.children){
+                        let secretText = mapTile.querySelector('p')
+                        matrixRow.push(secretText ? +secretText.innerText : 0)
+                    }
+                    mapMatrix.push(matrixRow)
+                }
+                console.log(mapMatrix);
+
+                fetch('/newMap', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(mapMatrix),
+                })
+            }
+
+            let createMapPlaceholders = () => {
+                for (let y = 0; y < 40; y++) {
+                    const placeholderRow = document.createElement('div');
+                    placeholderRow.classList.add('placeholderRow');
+                    for (let x = 0; x < 50; x++) {
+                        const placeholder = document.createElement('div');
+                        placeholder.classList.add('placeholder');
+                        placeholder.addEventListener('click', function () {
+                            placeholder.innerHTML = `
+                                <p class="invisible">${activeItemID}</p>
+                            `;
+                            placeholder.appendChild(images[activeItemID].cloneNode(true));
+                        });
+
+                        placeholderRow.appendChild(placeholder);
+                    }
+                    document.getElementById('map').appendChild(placeholderRow)
+                }
+            }
+
+            let handleItemSelection = (itemID, src) => {
+                activeItemID = itemID
+                activeIcon = src
+            }
+
+            const images = [];
+            fetch('/assets').then(res => res.blob()).then(assetBlob=>{
+                let assetURL = URL.createObjectURL(assetBlob);
+                let im = new Image();
+                im.src = assetURL;
+                im.onload = () => {
+                    let sliceWidth = 16
+                    let sliceHeight = 16
+
+                    let itemID = 0
+                    const tempCanvas = document.createElement('canvas');
+                    const ctx = tempCanvas.getContext('2d');
+                    tempCanvas.width = sliceWidth
+                    tempCanvas.height = sliceHeight
+
+                    for(let y=0;y<im.height;y+=sliceHeight){
+                        let itemRow = document.createElement('div')
+                        itemRow.className = "itemRow"
+                        for(let x=0;x<im.width;x+=sliceWidth){
+                            ctx.clearRect(0, 0, tempCanvas.width, tempCanvas.height)
+                            ctx.drawImage(im,x,y,sliceWidth,sliceHeight,0,0,tempCanvas.width, tempCanvas.height)
+
+                            let slicedItemSrc = tempCanvas.toDataURL()
+                            let slicedItem = new Image()
+                            slicedItem.className = "item"
+                            slicedItem.src = slicedItemSrc
+
+                            images.push(slicedItem)
+
+                            let currentItemId = itemID
+                            slicedItem.onclick = () => {
+                                handleItemSelection(currentItemId, slicedItemSrc)
+                            }
+                            itemRow.appendChild(slicedItem)
+                            itemID++
+                        }
+                        document.getElementById("assetPicker").appendChild(itemRow)
+                    }
+                }
+
+                createMapPlaceholders()
+            });
+        </script>
+    </body>
+</html>

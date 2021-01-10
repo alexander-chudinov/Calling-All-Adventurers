@@ -1,0 +1,9 @@
+{
+    "map":"map1",
+    "playerdata":[
+        {
+            "name":"Roy",
+            "hp":10
+        }
+    ]
+}
