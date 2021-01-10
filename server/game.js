@@ -49,9 +49,9 @@ class Game {
         const hp = 10;
         console.log('player joined: ', socket.id);
         this.players.push({
-            fighter, 
-            x: 0, 
-            y: 0, 
+            fighter,
+            x: 100,
+            y: 100,
             hp,
             maxHp: hp,
             direction: 0,
