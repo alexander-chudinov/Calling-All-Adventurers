@@ -42,14 +42,20 @@ class Game {
         sockets.splice(targetIndex);
     }
 
-    playerJoin(socket, username, fighter, x, y, hp){
+    playerJoin(socket, username, fighter){
         let fighterSprite = {
             "barbarian": 457
         }
-        // this.removePlayerUsingSocketID(socket.id)
+        const hp = 10;
         console.log('player joined: ', socket.id);
         this.players.push({
-            fighter, x, y, hp,
+            fighter, 
+            x: 0, 
+            y: 0, 
+            hp,
+            maxHp: hp,
+            direction: 0,
+            equipmentID: 426,
             name: username,
             spriteID: fighterSprite[fighter],
             socketID: socket.id,
@@ -68,6 +74,11 @@ class Game {
     playerMove(socketID, x, y){
         this.players[this.playerIndex(socketID)].x = x
         this.players[this.playerIndex(socketID)].y = y
+        this.gameStateUpdate()
+    }
+
+    playerAim(socketID, direction){
+        this.players[this.playerIndex(socketID)].direction = direction
         this.gameStateUpdate()
     }
 }
