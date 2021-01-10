@@ -1,17 +1,11 @@
-var express = require('express');
-var app = express();
-var exprressWs = require('express-ws')(app);
-app.use(express.json());
-app.use(require('cors')());
-
 var fs = require('fs');
 const { uuid } = require('uuidv4');
+const Game = require('./game')
+const express = require('express');
+const app = express();
 
-// app.use(function (req, res, next) {
-//   console.log('middleware');
-//   req.testing = 'testing';
-//   return next();
-// });
+app.use(express.json());
+app.use(require('cors')());
 
 app.get('/', function(req, res, next){
     res.send("yo");
@@ -30,11 +24,16 @@ app.get('/', function(req, res, next){
     });
 });
 
-// app.ws('/', function(ws, req) {
-//   ws.on('message', function(msg) {
-//     console.log("ws:"+msg);
-//   });
-//   console.log('socket', req.testing);
-// });
+const http = require('http').Server(app);
+const io = require('socket.io')(http);
 
-app.listen(3000);
+io.on('connection', (socket) => {
+    console.log('a user connected');
+    socket.on('disconnect', () => {
+        console.log('user disconnected');
+    });
+});
+
+http.listen(3000, () => {
+    console.log('listening on *:3000');
+});
