@@ -1,5 +1,14 @@
 const sockets = []
 const spriteSize = 16;
+const graves = [
+    [25, 3],
+    [29, 3],
+    [25, 7],
+    [29, 7],
+    [7, 35],
+    [9, 36],
+    [8, 37],
+]
 
 function randBetween(min, max) {
     return Math.floor(Math.random() * (max - min) + min);
@@ -19,7 +28,7 @@ class Game {
         this.buildings = []
         this.enemies = []
         this.io = io
-        setInterval(() => {if(this.remainingPlayers().length>0){this.spawnEnemy(5)}else{this.enemies=[]}}, 20000)
+        setInterval(() => {if(this.remainingPlayers().length>0){this.spawnEnemy(8 * this.players.length)}else{this.enemies=[]}}, 20000)
         setInterval(() => this.moveEnemies(), 1000/30)
     };
 
@@ -41,14 +50,14 @@ class Game {
             {
                 spriteID:314,
                 attack: 2,
-                hp: 100,
-                maxHp: 100,
+                hp: 150,
+                maxHp: 150,
                 speed: 1.5
             },{
                 spriteID: 315,
                 attack: 3,
-                hp: 200,
-                maxHp: 200,
+                hp: 300,
+                maxHp: 300,
                 speed: 1
             }
         ]
@@ -58,11 +67,13 @@ class Game {
         }
 
         for(let i = 0; i < numberOfEnemies; i++){
-            let enemy = randomEnemy()
+            let enemy = randomEnemy();
+            const grave = this.randElement(graves);
+            console.log(grave);
             this.enemies.push({
                 id: uuidv4(),
-                x: randBetween(0,800),
-                y: randBetween(0,640),
+                x: grave[0] * spriteSize,
+                y: grave[1] * spriteSize,
                 speed: enemy.speed,
                 attack: enemy.attack,
                 hp: enemy.hp,
@@ -128,9 +139,10 @@ class Game {
                 fighter: "barbarian",
                 spriteID: 457,
                 attack: 6,
-                maxHp: 100,
-                speed: 3,
+                maxHp: 130,
+                speed: 2,
                 equipmentID: 426,
+                range: 16,
             },
             {
                 fighter: "ninja",
@@ -139,6 +151,7 @@ class Game {
                 maxHp: 40,
                 speed: 6,
                 equipmentID: 323,
+                range: 16,
             },
             {
                 fighter: "spaceman",
@@ -147,14 +160,16 @@ class Game {
                 maxHp: 80,
                 speed: 4,
                 equipmentID: 468,
+                range: 20
             },
             {
                 fighter: "gunner",
                 spriteID: 25,
-                attack: 8,
+                attack: 9,
                 maxHp: 50,
                 speed: 3,
                 equipmentID: 471,
+                range: 14
             },
             {
                 fighter: "dog",
@@ -163,14 +178,16 @@ class Game {
                 maxHp: 1,
                 speed: 9,
                 equipmentID: 802,
+                range: 14
             },
             {
                 fighter: "wizard",
                 spriteID: 312,
-                attack: 12,
+                attack: 11,
                 maxHp: 60,
-                speed: 3,
+                speed: 2,
                 equipmentID: (Math.random() > 0.5) + 555,
+                range: 40
             },
             {
                 fighter: "farmer",
@@ -179,6 +196,7 @@ class Game {
                 maxHp: 40,
                 speed: 4,
                 equipmentID: 131,
+                range: 20
             }
         ]
 
@@ -201,6 +219,7 @@ class Game {
             name: username,
             spriteID: selectedFighter.spriteID,
             socketID: socket.id,
+            range: selectedFighter.range,
         })
         socket.join(this.roomID)
         sockets.push(socket)
@@ -235,8 +254,8 @@ class Game {
         const { x, y } = player;
         const ox = x - spriteSize / 2, oy = y - spriteSize / 2;
 
-        player.equipX = ox - 2 + Math.cos(player.direction) * spriteSize;
-        player.equipY = oy - 2 + Math.sin(player.direction) * spriteSize;
+        player.equipX = ox - 2 + Math.cos(player.direction) * player.range;
+        player.equipY = oy - 2 + Math.sin(player.direction) * player.range;
     }
 
     playerAim(socketID, direction){
