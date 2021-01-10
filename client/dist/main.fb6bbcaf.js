@@ -8355,25 +8355,83 @@ canvas.height = 600;
 var socket = (0, _socket.default)();
 
 function loadSpritesheet() {
-  var spritesheet = document.querySelector('img');
-  var tmp = document.createElement('canvas');
-  var ctx = tmp.getContext('2d');
-  tmp.height = tmp.width = spriteSize;
-  document.body.appendChild(tmp);
+  return _loadSpritesheet.apply(this, arguments);
+}
 
-  for (var y = 0; y < 1; y++) {
-    for (var x = 0; x < 1; x++) {
-      ctx.drawImage(spritesheet, -x * spriteSize, -y * spriteSize);
-      var imgData = canvas.toDataURL();
-      var img = new Image();
-      img.src = imgData;
-      document.body.appendChild(img.cloneNode(true));
-      images.push(img);
-    }
-  }
+function _loadSpritesheet() {
+  _loadSpritesheet = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee() {
+    var spritesheet, tmp, ctx, y, _loop, x;
 
-  spritesheet.addEventListener('error', console.error);
-  spritesheet.addEventListener('load', function () {});
+    return regeneratorRuntime.wrap(function _callee$(_context2) {
+      while (1) {
+        switch (_context2.prev = _context2.next) {
+          case 0:
+            spritesheet = document.querySelector('img');
+            tmp = document.createElement('canvas');
+            ctx = tmp.getContext('2d');
+            tmp.height = tmp.width = spriteSize;
+            y = 0;
+
+          case 5:
+            if (!(y < 22)) {
+              _context2.next = 16;
+              break;
+            }
+
+            _loop = /*#__PURE__*/regeneratorRuntime.mark(function _loop(x) {
+              var imgData, img;
+              return regeneratorRuntime.wrap(function _loop$(_context) {
+                while (1) {
+                  switch (_context.prev = _context.next) {
+                    case 0:
+                      ctx.clearRect(0, 0, spriteSize, spriteSize);
+                      ctx.drawImage(spritesheet, -x * spriteSize, -y * spriteSize);
+                      imgData = tmp.toDataURL();
+                      img = new Image();
+                      img.src = imgData;
+                      _context.next = 7;
+                      return new Promise(function (res) {
+                        img.addEventListener('load', function () {
+                          images.push(img);
+                          res();
+                        });
+                      });
+
+                    case 7:
+                    case "end":
+                      return _context.stop();
+                  }
+                }
+              }, _loop);
+            });
+            x = 0;
+
+          case 8:
+            if (!(x < 48)) {
+              _context2.next = 13;
+              break;
+            }
+
+            return _context2.delegateYield(_loop(x), "t0", 10);
+
+          case 10:
+            x++;
+            _context2.next = 8;
+            break;
+
+          case 13:
+            y++;
+            _context2.next = 5;
+            break;
+
+          case 16:
+          case "end":
+            return _context2.stop();
+        }
+      }
+    }, _callee);
+  }));
+  return _loadSpritesheet.apply(this, arguments);
 }
 
 function loadMap() {
@@ -8381,42 +8439,42 @@ function loadMap() {
 }
 
 function _loadMap() {
-  _loadMap = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee() {
+  _loadMap = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee2() {
     var _yield$fetch$then, tiles, y, x, spriteID;
 
-    return regeneratorRuntime.wrap(function _callee$(_context) {
+    return regeneratorRuntime.wrap(function _callee2$(_context3) {
       while (1) {
-        switch (_context.prev = _context.next) {
+        switch (_context3.prev = _context3.next) {
           case 0:
-            _context.next = 2;
+            ctx.fillStyle = '#3d2a17';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            _context3.next = 4;
             return fetch('http://localhost:3000/map').then(function (res) {
               return res.json();
             });
 
-          case 2:
-            _yield$fetch$then = _context.sent;
+          case 4:
+            _yield$fetch$then = _context3.sent;
             tiles = _yield$fetch$then.tiles;
 
             for (y = 0; y < tiles.length; y++) {
               for (x = 0; x < tiles[0].length; x++) {
                 spriteID = tiles[y][x];
-                console.log(spriteID);
                 ctx.drawImage(images[spriteID], x * spriteSize, y * spriteSize);
               }
             }
 
-          case 5:
+          case 7:
           case "end":
-            return _context.stop();
+            return _context3.stop();
         }
       }
-    }, _callee);
+    }, _callee2);
   }));
   return _loadMap.apply(this, arguments);
 }
 
-loadSpritesheet();
-loadMap();
+loadSpritesheet().then(loadMap);
 },{"socket.io-client":"node_modules/socket.io-client/build/index.js","regenerator-runtime/runtime":"node_modules/regenerator-runtime/runtime.js"}],"node_modules/parcel/src/builtins/hmr-runtime.js":[function(require,module,exports) {
 var global = arguments[3];
 var OVERLAY_ID = '__parcel__error__overlay__';
@@ -8445,7 +8503,7 @@ var parent = module.bundle.parent;
 if ((!parent || !parent.isParcelRequire) && typeof WebSocket !== 'undefined') {
   var hostname = "" || location.hostname;
   var protocol = location.protocol === 'https:' ? 'wss' : 'ws';
-  var ws = new WebSocket(protocol + '://' + hostname + ':' + "54515" + '/');
+  var ws = new WebSocket(protocol + '://' + hostname + ':' + "57261" + '/');
 
   ws.onmessage = function (event) {
     checkedAssets = {};
