@@ -41,7 +41,7 @@ io.on('connection', (socket) => {
     socket.on('playerJoin', (data) => {
         const { name, fighter } = data;
         console.log(name, fighter);
-        game.playerJoin(socket, name, fighter, 0, 0, 100);
+        game.playerJoin(socket, name, fighter);
     }).on('ready', () => {
         game.playerReady(socket);
     }).on('playerMove', ({ x, y }) => {
