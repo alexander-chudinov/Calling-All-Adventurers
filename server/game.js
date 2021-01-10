@@ -11,26 +11,28 @@ class Game {
     };
 
     gameStateUpdate(){
+        console.log(this.players);
         this.io.in(this.roomID).emit("gameStateUpdate", {
             players: this.players,
             buildings: this.buildings
-        })
+        });
     }
 
     spawnEnemy(numberOfEnemies, x, y){
         let enemySprite = {
-            "ghost": 195
+            "ghost1": 314,
+            "ghost2": 315,
         }
         for(let i = 0; i<numberOfEnemies; i++){
             this.enemies.push({
                 x, y,
-                spriteID: enemySprite.ghost
+                spriteID: enemySprite.ghost1
             })
         }
         this.io.in(this.roomID).emit("spawnEnemy")
     }
 
-    playerIndex(socketID){
+    playerIndex(socketID) {
         return this.players.findIndex(p => p.socketID === socketID);
     }
 
@@ -42,14 +44,15 @@ class Game {
 
     playerJoin(socket, username, fighter, x, y, hp){
         let fighterSprite = {
-            "barbarian": 259
+            "barbarian": 457
         }
-        this.removePlayerUsingSocketID(socket.id)
+        // this.removePlayerUsingSocketID(socket.id)
+        console.log('player joined: ', socket.id);
         this.players.push({
+            fighter, x, y, hp,
             name: username,
-            fighter: fighterSprite[fighter],
+            spriteID: fighterSprite[fighter],
             socketID: socket.id,
-            x, y, hp
         })
         socket.join(this.roomID)
         sockets.push(socket)
