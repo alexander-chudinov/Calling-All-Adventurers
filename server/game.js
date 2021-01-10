@@ -220,6 +220,7 @@ class Game {
             spriteID: selectedFighter.spriteID,
             socketID: socket.id,
             range: selectedFighter.range,
+            state: "connected"
         })
         socket.join(this.roomID)
         sockets.push(socket)
@@ -235,7 +236,8 @@ class Game {
     }
 
     playerLeave(socket){
-        this.removePlayerUsingSocketID(socket.id)
+        // this.removePlayerUsingSocketID(socket.id)
+        this.players = this.players.filter(e => e.socketID != socket.id);
         socket.leave(this.roomID)
         this.gameStateUpdate()
     }
