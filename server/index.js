@@ -16,11 +16,11 @@ const { uuid } = require('uuidv4');
 app.get('/', function(req, res, next){
     res.send("yo");
 }).get('/assets', (req, res) => {
-    res.sendFile(__dirname +'/data/assets/game_assets.png')
+    res.sendFile(__dirname + '/data/assets/game_assets.png')
 }).get('/mapCreator', (req, res) => {
-    res.sendFile(__dirname +'/data/maps/mapCreator.html')
-}).get('/map', (req, res) => {
-    res.sendFile(__dirname +'/data/maps/map1.json');
+    res.sendFile(__dirname + '/data/maps/mapCreator.html')
+}).get('/map/:id', (req, res) => {
+    res.sendFile(`${__dirname}/data/maps/map${req.params.id}.json`);
 }).post('/newMap', (req,res)=>{
     fs.appendFile('./data/maps/'+uuid()+'.json', JSON.stringify({
         tiles:req.body
