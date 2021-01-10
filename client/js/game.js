@@ -228,14 +228,16 @@ async function draw () {
         ctx.fillStyle = '#00ff00';
         ctx.fillRect(x - hpBarWidth / 2, oy - 4, hp / maxHp * hpBarWidth, 3);
 
-        // Player name tag
-        // BG
-        ctx.fillStyle = '#ededed';
-        ctx.fillRect(x - offset - 2, y - fontSize * 2 - 2, offset * 2 + 4, fontSize + 2);
+        if(name){
+            // Player name tag
+            // BG
+            ctx.fillStyle = '#ededed';
+            ctx.fillRect(x - offset - 2, y - fontSize * 2 - 2, offset * 2 + 4, fontSize + 2);
 
-        // FG
-        ctx.fillStyle = '#181818';
-        ctx.fillText(name, x - offset, y - fontSize - 2);
+            // FG
+            ctx.fillStyle = '#181818';
+            ctx.fillText(name, x - offset, y - fontSize - 2);
+        }
     }
 
     for (const enemy of enemies){
