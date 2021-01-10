@@ -31,12 +31,20 @@ const io = require('socket.io')(http, {
     }
 });
 
+const game = new Game(uuid(), io)
+
 io.on('connection', (socket) => {
     console.log('a user connected');
-    socket.on('disconnect', () => {
-        console.log('user disconnected');
+
+    socket.on('playerJoin', (username, fighter, x=0, y=0, hp=10) => {
+        game.playerJoin(socket, username, fighter, x, y, hp)
+    }).on('playerMove', (x,y) => {
+        game.playerMove(socket, x, y)
+    }).on('disconnect', () => {
+        game.playerLeave(socketID)
     });
-});
+
+})
 
 http.listen(3000, () => {
     console.log('listening on *:3000');
