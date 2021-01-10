@@ -13,6 +13,7 @@ canvas.height = 600;
 
 const socket = io();
 
+
 async function loadSpritesheet () {
     const spritesheet = document.querySelector('img');
     const tmp = document.createElement('canvas');
