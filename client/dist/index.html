@@ -1,11 +1,26 @@
 <!DOCTYPE html>
 <html>
     <head>
+        <title>Calling All Adventurers!</title>
         <link rel="stylesheet" type="text/css" href="/main.c52e0fe2.css">
     <script src="/main.c52e0fe2.js"></script></head>
     <body>
+        <div id="join-message" class="invisible">
+            <form>
+                <h1>Calling All Adventurers!</h1>
+
+                <label for="player-name">This is the tale of...</label>
+                <input type="text" id="player-name" placeholder="Poggersdorf" maxlength="20">
+
+                <h2>Choose your fighter:</h2>
+                <button type="submit" class="fighter" name="barbarian">
+                    Barbarian
+                </button>
+            </form>
+        </div>
+
         <img src="/game_assets.49f7fc61.png" style="display: none;">
-        <canvas id="game-canvas"></canvas>
+        <canvas id="game-canvas" class="invisible"></canvas>
         <script src="/main.fb6bbcaf.js"></script>
     </body>
 </html>

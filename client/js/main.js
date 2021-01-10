@@ -1,5 +1,6 @@
 import io from 'socket.io-client';
 import 'regenerator-runtime/runtime';
+import { gameLoop } from './game';
 
 const $ = document.querySelector.bind(document);
 
@@ -11,10 +12,11 @@ const ctx = canvas.getContext('2d');
 canvas.width = 800;
 canvas.height = 600;
 
-const socket = io.connect('http://localhost:3000', {reconnect: true});
+const socket = io.connect('http://localhost:3000', {
+    reconnect: true
+});
 
 setInterval(() => socket.emit('ping'), 2000)
-
 
 async function loadSpritesheet () {
     const spritesheet = document.querySelector('img');
@@ -54,4 +56,25 @@ async function loadMap () {
     }
 }
 
-loadSpritesheet().then(loadMap);
+async function userLoad () {
+    $('#join-message').classList.remove('invisible');
+
+    await new Promise(function (res) {
+        $('form').addEventListener('submit', function (evt) {
+            evt.preventDefault();
+            socket.emit('playerJoin', {
+                name: $('#player-name').value,
+                fighter: evt.submitter.name,
+            })
+            $('#join-message').classList.add('invisible');
+            canvas.classList.remove('invisible');
+            res();
+        });
+    });
+}
+
+(async function () {
+    loadSpritesheet().then(loadMap);
+    await userLoad();
+    gameLoop();
+})();

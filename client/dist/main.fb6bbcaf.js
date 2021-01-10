@@ -8332,12 +8332,182 @@ try {
   Function("r", "regeneratorRuntime = r")(runtime);
 }
 
-},{}],"js/main.js":[function(require,module,exports) {
+},{}],"node_modules/vm-browserify/index.js":[function(require,module,exports) {
+var indexOf = function (xs, item) {
+    if (xs.indexOf) return xs.indexOf(item);
+    else for (var i = 0; i < xs.length; i++) {
+        if (xs[i] === item) return i;
+    }
+    return -1;
+};
+var Object_keys = function (obj) {
+    if (Object.keys) return Object.keys(obj)
+    else {
+        var res = [];
+        for (var key in obj) res.push(key)
+        return res;
+    }
+};
+
+var forEach = function (xs, fn) {
+    if (xs.forEach) return xs.forEach(fn)
+    else for (var i = 0; i < xs.length; i++) {
+        fn(xs[i], i, xs);
+    }
+};
+
+var defineProp = (function() {
+    try {
+        Object.defineProperty({}, '_', {});
+        return function(obj, name, value) {
+            Object.defineProperty(obj, name, {
+                writable: true,
+                enumerable: false,
+                configurable: true,
+                value: value
+            })
+        };
+    } catch(e) {
+        return function(obj, name, value) {
+            obj[name] = value;
+        };
+    }
+}());
+
+var globals = ['Array', 'Boolean', 'Date', 'Error', 'EvalError', 'Function',
+'Infinity', 'JSON', 'Math', 'NaN', 'Number', 'Object', 'RangeError',
+'ReferenceError', 'RegExp', 'String', 'SyntaxError', 'TypeError', 'URIError',
+'decodeURI', 'decodeURIComponent', 'encodeURI', 'encodeURIComponent', 'escape',
+'eval', 'isFinite', 'isNaN', 'parseFloat', 'parseInt', 'undefined', 'unescape'];
+
+function Context() {}
+Context.prototype = {};
+
+var Script = exports.Script = function NodeScript (code) {
+    if (!(this instanceof Script)) return new Script(code);
+    this.code = code;
+};
+
+Script.prototype.runInContext = function (context) {
+    if (!(context instanceof Context)) {
+        throw new TypeError("needs a 'context' argument.");
+    }
+    
+    var iframe = document.createElement('iframe');
+    if (!iframe.style) iframe.style = {};
+    iframe.style.display = 'none';
+    
+    document.body.appendChild(iframe);
+    
+    var win = iframe.contentWindow;
+    var wEval = win.eval, wExecScript = win.execScript;
+
+    if (!wEval && wExecScript) {
+        // win.eval() magically appears when this is called in IE:
+        wExecScript.call(win, 'null');
+        wEval = win.eval;
+    }
+    
+    forEach(Object_keys(context), function (key) {
+        win[key] = context[key];
+    });
+    forEach(globals, function (key) {
+        if (context[key]) {
+            win[key] = context[key];
+        }
+    });
+    
+    var winKeys = Object_keys(win);
+
+    var res = wEval.call(win, this.code);
+    
+    forEach(Object_keys(win), function (key) {
+        // Avoid copying circular objects like `top` and `window` by only
+        // updating existing context properties or new properties in the `win`
+        // that was only introduced after the eval.
+        if (key in context || indexOf(winKeys, key) === -1) {
+            context[key] = win[key];
+        }
+    });
+
+    forEach(globals, function (key) {
+        if (!(key in context)) {
+            defineProp(context, key, win[key]);
+        }
+    });
+    
+    document.body.removeChild(iframe);
+    
+    return res;
+};
+
+Script.prototype.runInThisContext = function () {
+    return eval(this.code); // maybe...
+};
+
+Script.prototype.runInNewContext = function (context) {
+    var ctx = Script.createContext(context);
+    var res = this.runInContext(ctx);
+
+    if (context) {
+        forEach(Object_keys(ctx), function (key) {
+            context[key] = ctx[key];
+        });
+    }
+
+    return res;
+};
+
+forEach(Object_keys(Script.prototype), function (name) {
+    exports[name] = Script[name] = function (code) {
+        var s = Script(code);
+        return s[name].apply(s, [].slice.call(arguments, 1));
+    };
+});
+
+exports.isContext = function (context) {
+    return context instanceof Context;
+};
+
+exports.createScript = function (code) {
+    return exports.Script(code);
+};
+
+exports.createContext = Script.createContext = function (context) {
+    var copy = new Context();
+    if(typeof context === 'object') {
+        forEach(Object_keys(context), function (key) {
+            copy[key] = context[key];
+        });
+    }
+    return copy;
+};
+
+},{}],"js/game.js":[function(require,module,exports) {
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.gameLoop = gameLoop;
+
+var _vm = require("vm");
+
+function gameLoop() {
+  requestAnimationFrame(draw); // gameLoop();
+}
+
+function draw() {
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+}
+},{"vm":"node_modules/vm-browserify/index.js"}],"js/main.js":[function(require,module,exports) {
 "use strict";
 
 var _socket = _interopRequireDefault(require("socket.io-client"));
 
 require("regenerator-runtime/runtime");
+
+var _game = require("./game");
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
@@ -8366,12 +8536,12 @@ function loadSpritesheet() {
 }
 
 function _loadSpritesheet() {
-  _loadSpritesheet = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee() {
+  _loadSpritesheet = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee2() {
     var spritesheet, tmp, ctx, y, _loop, x;
 
-    return regeneratorRuntime.wrap(function _callee$(_context2) {
+    return regeneratorRuntime.wrap(function _callee2$(_context3) {
       while (1) {
-        switch (_context2.prev = _context2.next) {
+        switch (_context3.prev = _context3.next) {
           case 0:
             spritesheet = document.querySelector('img');
             tmp = document.createElement('canvas');
@@ -8381,22 +8551,22 @@ function _loadSpritesheet() {
 
           case 5:
             if (!(y < 22)) {
-              _context2.next = 16;
+              _context3.next = 16;
               break;
             }
 
             _loop = /*#__PURE__*/regeneratorRuntime.mark(function _loop(x) {
               var imgData, img;
-              return regeneratorRuntime.wrap(function _loop$(_context) {
+              return regeneratorRuntime.wrap(function _loop$(_context2) {
                 while (1) {
-                  switch (_context.prev = _context.next) {
+                  switch (_context2.prev = _context2.next) {
                     case 0:
                       ctx.clearRect(0, 0, spriteSize, spriteSize);
                       ctx.drawImage(spritesheet, -x * spriteSize, -y * spriteSize);
                       imgData = tmp.toDataURL();
                       img = new Image();
                       img.src = imgData;
-                      _context.next = 7;
+                      _context2.next = 7;
                       return new Promise(function (res) {
                         img.addEventListener('load', function () {
                           images.push(img);
@@ -8406,7 +8576,7 @@ function _loadSpritesheet() {
 
                     case 7:
                     case "end":
-                      return _context.stop();
+                      return _context2.stop();
                   }
                 }
               }, _loop);
@@ -8415,28 +8585,28 @@ function _loadSpritesheet() {
 
           case 8:
             if (!(x < 48)) {
-              _context2.next = 13;
+              _context3.next = 13;
               break;
             }
 
-            return _context2.delegateYield(_loop(x), "t0", 10);
+            return _context3.delegateYield(_loop(x), "t0", 10);
 
           case 10:
             x++;
-            _context2.next = 8;
+            _context3.next = 8;
             break;
 
           case 13:
             y++;
-            _context2.next = 5;
+            _context3.next = 5;
             break;
 
           case 16:
           case "end":
-            return _context2.stop();
+            return _context3.stop();
         }
       }
-    }, _callee);
+    }, _callee2);
   }));
   return _loadSpritesheet.apply(this, arguments);
 }
@@ -8446,22 +8616,22 @@ function loadMap() {
 }
 
 function _loadMap() {
-  _loadMap = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee2() {
+  _loadMap = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee3() {
     var _yield$fetch$then, tiles, y, x, spriteID;
 
-    return regeneratorRuntime.wrap(function _callee2$(_context3) {
+    return regeneratorRuntime.wrap(function _callee3$(_context4) {
       while (1) {
-        switch (_context3.prev = _context3.next) {
+        switch (_context4.prev = _context4.next) {
           case 0:
             ctx.fillStyle = '#3d2a17';
             ctx.fillRect(0, 0, canvas.width, canvas.height);
-            _context3.next = 4;
+            _context4.next = 4;
             return fetch('http://localhost:3000/map/2').then(function (res) {
               return res.json();
             });
 
           case 4:
-            _yield$fetch$then = _context3.sent;
+            _yield$fetch$then = _context4.sent;
             tiles = _yield$fetch$then.tiles;
 
             for (y = 0; y < tiles.length; y++) {
@@ -8473,16 +8643,69 @@ function _loadMap() {
 
           case 7:
           case "end":
-            return _context3.stop();
+            return _context4.stop();
         }
       }
-    }, _callee2);
+    }, _callee3);
   }));
   return _loadMap.apply(this, arguments);
 }
 
-loadSpritesheet().then(loadMap);
-},{"socket.io-client":"node_modules/socket.io-client/build/index.js","regenerator-runtime/runtime":"node_modules/regenerator-runtime/runtime.js"}],"node_modules/parcel/src/builtins/hmr-runtime.js":[function(require,module,exports) {
+function userLoad() {
+  return _userLoad.apply(this, arguments);
+}
+
+function _userLoad() {
+  _userLoad = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee4() {
+    return regeneratorRuntime.wrap(function _callee4$(_context5) {
+      while (1) {
+        switch (_context5.prev = _context5.next) {
+          case 0:
+            $('#join-message').classList.remove('invisible');
+            _context5.next = 3;
+            return new Promise(function (res) {
+              $('form').addEventListener('submit', function (evt) {
+                evt.preventDefault();
+                socket.emit('playerJoin', {
+                  name: $('#player-name').value,
+                  fighter: evt.submitter.name
+                });
+                $('#join-message').classList.add('invisible');
+                canvas.classList.remove('invisible');
+                res();
+              });
+            });
+
+          case 3:
+          case "end":
+            return _context5.stop();
+        }
+      }
+    }, _callee4);
+  }));
+  return _userLoad.apply(this, arguments);
+}
+
+_asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee() {
+  return regeneratorRuntime.wrap(function _callee$(_context) {
+    while (1) {
+      switch (_context.prev = _context.next) {
+        case 0:
+          loadSpritesheet().then(loadMap);
+          _context.next = 3;
+          return userLoad();
+
+        case 3:
+          (0, _game.gameLoop)();
+
+        case 4:
+        case "end":
+          return _context.stop();
+      }
+    }
+  }, _callee);
+}))();
+},{"socket.io-client":"node_modules/socket.io-client/build/index.js","regenerator-runtime/runtime":"node_modules/regenerator-runtime/runtime.js","./game":"js/game.js"}],"node_modules/parcel/src/builtins/hmr-runtime.js":[function(require,module,exports) {
 var global = arguments[3];
 var OVERLAY_ID = '__parcel__error__overlay__';
 var OldModule = module.bundle.Module;
@@ -8510,7 +8733,7 @@ var parent = module.bundle.parent;
 if ((!parent || !parent.isParcelRequire) && typeof WebSocket !== 'undefined') {
   var hostname = "" || location.hostname;
   var protocol = location.protocol === 'https:' ? 'wss' : 'ws';
-  var ws = new WebSocket(protocol + '://' + hostname + ':' + "61154" + '/');
+  var ws = new WebSocket(protocol + '://' + hostname + ':' + "62104" + '/');
 
   ws.onmessage = function (event) {
     checkedAssets = {};

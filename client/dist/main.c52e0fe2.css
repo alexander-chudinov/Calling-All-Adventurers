@@ -1,7 +1,87 @@
-body{
+@import url('https://fonts.googleapis.com/css2?family=Pirata+One&display=swap');
+
+* {
+    box-sizing: border-box;
+    font-family: inherit;
+}
+
+body {
     padding: 0;
     margin: 0;
     background: #000;
+
+    font-family: 'Pirata One', cursive;
+}
+
+div#join-message {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+
+    padding: 10rem;
+    
+    background: url('/parchment.d7956cd9.png');
+    /* , url('../assets/paper.jpg'); */
+    background-repeat: no-repeat;
+    background-size: cover;
+    background-blend-mode: multiply;
+
+    text-align: center;
+    transition: .2s;
+}
+
+canvas {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    border: 5px solid white;
+    transition: .2s;
+}
+
+input[type="text"] {
+    background: transparent;
+    outline: none;
+    border: none;
+    border-bottom: 3px solid black;
+    margin-left: 10px;
+    color: rgb(156, 0, 0);
+    transition: .2s;
+}
+
+input[type="text"]:hover, input[type="text"]:focus {
+    border-radius: 10px;
+    text-shadow: 0 0 12px rgb(226, 153, 44);
+}
+
+input[type="text"], label {
+    font-size: 2rem;
+}
+
+h1 {
+    font-size: 3rem;
+}
+
+button.fighter {
+    padding: 1.5rem;
+    font-size: 1.5rem;
+    background: transparent;
+    border: 3px solid black;
+    outline: none;
+    cursor: pointer;
+    transition: .2s;
+}
+
+button.fighter:hover {
+    background: black;
+    color: white;
+}
+
+.invisible {
+    opacity: 0;
+    position: absolute;
+    pointer-events: none;
 }
 
 /*# sourceMappingURL=/main.c52e0fe2.css.map */
