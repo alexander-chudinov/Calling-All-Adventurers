@@ -42,7 +42,7 @@ async function loadMap () {
     ctx.fillStyle = '#3d2a17';
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-    const { tiles } = await fetch('http://localhost:3000/map').then(res => res.json());
+    const { tiles } = await fetch('http://localhost:3000/map/2').then(res => res.json());
     for (let y = 0; y < tiles.length; y++) {
         for (let x = 0; x < tiles[0].length; x++) {
             const spriteID = tiles[y][x];

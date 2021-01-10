@@ -8449,7 +8449,7 @@ function _loadMap() {
             ctx.fillStyle = '#3d2a17';
             ctx.fillRect(0, 0, canvas.width, canvas.height);
             _context3.next = 4;
-            return fetch('http://localhost:3000/map').then(function (res) {
+            return fetch('http://localhost:3000/map/2').then(function (res) {
               return res.json();
             });
 
@@ -8503,7 +8503,7 @@ var parent = module.bundle.parent;
 if ((!parent || !parent.isParcelRequire) && typeof WebSocket !== 'undefined') {
   var hostname = "" || location.hostname;
   var protocol = location.protocol === 'https:' ? 'wss' : 'ws';
-  var ws = new WebSocket(protocol + '://' + hostname + ':' + "57261" + '/');
+  var ws = new WebSocket(protocol + '://' + hostname + ':' + "58763" + '/');
 
   ws.onmessage = function (event) {
     checkedAssets = {};
