@@ -2,6 +2,7 @@ var express = require('express');
 var app = express();
 var exprressWs = require('express-ws')(app);
 app.use(express.json());
+app.use(require('cors')());
 
 var fs = require('fs');
 const { uuid } = require('uuidv4');
@@ -18,6 +19,8 @@ app.get('/', function(req, res, next){
     res.sendFile(__dirname +'/data/assets/game_assets.png')
 }).get('/mapCreator', (req, res) => {
     res.sendFile(__dirname +'/data/maps/mapCreator.html')
+}).get('/map', (req, res) => {
+    res.sendFile(__dirname +'/data/maps/map1.json');
 }).post('/newMap', (req,res)=>{
     fs.appendFile('./data/maps/'+uuid()+'.json', JSON.stringify({
         tiles:req.body
