@@ -22,6 +22,8 @@ app.get('/', function(req, res, next){
         if (err) throw err;
         console.log('New map saved.');
     });
+}).get('/tileTypes', (req, res) => {
+    res.sendFile(__dirname + '/data/maps/tileTypes.json')
 });
 
 const http = require('http').Server(app);
