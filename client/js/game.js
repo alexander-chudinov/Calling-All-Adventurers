@@ -4,14 +4,17 @@ const canvas = $('canvas');
 const ctx = canvas.getContext('2d');
 
 let players = [],
+    enemies = [],
     mapState = [],
     keys = {},
     player = {
         id: '',
-        x: 0,
-        y: 0,
+        x: 200,
+        y: 200,
         speed: 3,
+        maxSpeed: 3,
         direction: 0,
+        hp:10,
         equipX: 0,
         equipY: 0,
         maybeMove () {
@@ -34,12 +37,12 @@ let players = [],
         maybeApplyEffects () {
             const xIndex = Math.floor(this.x / spriteSize);
             const yIndex = Math.floor(this.y / spriteSize);
-            
+
             const effect = collidables[yIndex][xIndex];
             if (effect === 1) {
-                this.speed = 1.5;
+                this.speed = this.maxSpeed / 2;
             } else {
-                this.speed = 3;
+                this.speed = this.maxSpeed;
                 if (effect === 0) {
                     // player is somehow inside of a block
                     this.x += spriteSize;
@@ -55,9 +58,9 @@ let players = [],
         },
         maybeDamagePlayer() {
             for (const player of players) {
-                console.log(player.socketID + ' | ' + this.id);
                 if (
                     player.socketID !== this.id &&
+                    player.hp > 0 &&
                     Math.sqrt(
                         (this.x - player.equipX) ** 2 +
                         (this.y - player.equipY) ** 2
@@ -136,7 +139,11 @@ let players = [],
 
                 return colMatr
             } catch { }
-            return false
+            return [
+                [null, null, null],
+                [null, null, null],
+                [null, null, null]
+            ]
         }
     };
 
@@ -158,23 +165,25 @@ export function init(mapState_) {
     registerListeners();
     gameLoop();
 
-    console.log(collidables);
-
     socket.emit('ready');
 
     socket.on('gameStateUpdate', function (data) {
         players = data.players;
+        enemies = data.enemies;
     });
 
-    socket.on('assignID', function (data) {
+    socket.on('assignData', function (data) {
         player.id = data.id;
+        player.speed = player.maxSpeed = data.speed;
     });
 }
 
 function gameLoop () {
-    player.maybeMove();
-    player.maybeApplyEffects();
-    player.maybeDamagePlayer();
+    if (player.hp > 0) {
+        player.maybeMove();
+        player.maybeApplyEffects();
+        player.maybeDamagePlayer();
+    }
 
     draw();
 
@@ -189,18 +198,16 @@ async function draw () {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     await drawMap(mapState);
 
-    for (const player of players) {
-        const { x, y, name, direction, equipmentID, spriteID, hp, maxHp } = player;
-
+    for (const { x, y, name, direction, equipmentID, spriteID, hp, maxHp, equipX, equipY } of players) {
         const ox = x - spriteSize / 2, oy = y - spriteSize / 2;
 
         ctx.drawImage(images[spriteID], ox, oy);
         const offset = ctx.measureText(name).width / 2
 
-        player.equipX = ox - 2 + Math.cos(direction) * spriteSize;
-        player.equipY = oy - 2 + Math.sin(direction) * spriteSize;
+        player.equipX = equipX;
+        player.equipY = equipY;
 
-        ctx.drawImage(images[equipmentID], player.equipX, player.equipY);
+        ctx.drawImage(images[equipmentID], equipX, equipY);
 
         // HP
         // BG
@@ -219,5 +226,21 @@ async function draw () {
         // FG
         ctx.fillStyle = '#181818';
         ctx.fillText(name, x - offset, y - fontSize - 2);
+    }
+
+    for (const enemy of enemies){
+        const { x, y, spriteID, hp, maxHp } = enemy;
+        const ox = x - spriteSize / 2, oy = y - spriteSize / 2;
+
+        ctx.drawImage(images[spriteID], ox, oy);
+
+        // HP
+        // BG
+        ctx.fillStyle = '#ff0000';
+        ctx.fillRect(x - hpBarWidth / 2, oy - 4, hpBarWidth, 3);
+
+        // FG
+        ctx.fillStyle = '#00ff00';
+        ctx.fillRect(x - hpBarWidth / 2, oy - 4, hp / maxHp * hpBarWidth, 3);
     }
 }
