@@ -28,7 +28,7 @@ class Game {
         this.buildings = []
         this.enemies = []
         this.io = io
-        setInterval(() => {if(this.remainingPlayers().length>0){this.spawnEnemy(8 * this.players.length)}else{this.enemies=[]}}, 20000)
+        setInterval(() => {if(this.remainingPlayers().length>0){this.spawnEnemy(8 * this.players.length)}else{this.enemies=[]}}, 15000)
         setInterval(() => this.moveEnemies(), 1000/30)
     };
 
@@ -149,7 +149,7 @@ class Game {
                 spriteID: 462,
                 attack: 4,
                 maxHp: 40,
-                speed: 6,
+                speed: 3,
                 equipmentID: 323,
                 range: 16,
             },
@@ -158,7 +158,7 @@ class Game {
                 spriteID: 460,
                 attack: 3,
                 maxHp: 80,
-                speed: 4,
+                speed: 2,
                 equipmentID: 468,
                 range: 20
             },
@@ -176,7 +176,7 @@ class Game {
                 spriteID: 367,
                 attack: 999,
                 maxHp: 1,
-                speed: 9,
+                speed: 4,
                 equipmentID: 802,
                 range: 14
             },
@@ -194,7 +194,7 @@ class Game {
                 spriteID: 127,
                 attack: 2,
                 maxHp: 40,
-                speed: 4,
+                speed: 3,
                 equipmentID: 131,
                 range: 20
             }
@@ -285,6 +285,9 @@ class Game {
             if(player.hp === 0){
                 player.spriteID = 610
                 player.equipmentID = 0
+            }
+            if(this.remainingPlayers().length===0){
+                this.io.in(this.roomID).emit("gameOver")
             }
         }
     }
