@@ -1,49 +1,54 @@
-const width = 800;
-const height = 600;
-const frameWidth = 16;
-const frameHeight = 16;
+import io from 'socket.io-client';
+import 'regenerator-runtime/runtime';
 
-const game = new Phaser.Game({
-    type: Phaser.AUTO,
-    width, height,
-    scene: { preload, create },
-});
+const $ = document.querySelector.bind(document);
 
-function preload () {
-    game.load.spritesheet('sprites', '../assets', { frameWidth, frameHeight });
-}
+const spriteSize = 16;
+const images = [];
 
-function update () {
+const canvas = $('canvas');
+const ctx = canvas.getContext('2d');
+canvas.width = 800;
+canvas.height = 600;
 
-}
+const socket = io();
 
-const classTiles = {
-    'barbarian': 259
-}
+function loadSpritesheet () {
+    const spritesheet = document.querySelector('img');
+    const tmp = document.createElement('canvas');
+    const ctx = tmp.getContext('2d');
+    tmp.height = tmp.width = spriteSize;
 
-function addPlayer (this, { x, y, type }) {
-    this.add.sprite(x, y, 'sprites', classTiles[type]).setOrigin(0.5, 0.5);
+    document.body.appendChild(tmp);
 
-}
+    for (let y = 0; y < 1; y++) {
+        for (let x = 0; x < 1; x++) {
+            ctx.drawImage(spritesheet, -x * spriteSize, -y * spriteSize)
 
-async function create () {
-    const this_ = this;
-    this.socket = io();
-    this.player = this.physics.add.group();
-
-    const { tileData, buildings } = await fetch('/map.json');
-    const rows = tileData.length;
-    const cols = tileData[0].length;
-
-    for (let y = 0; y < rows; y++) {
-        for (let x = 0; x < cols; x++) {
-            this.add.sprite(x * frameWidth, y * frameHeight, 'sprites', tile);
+            const imgData = canvas.toDataURL();
+            const img = new Image();
+            img.src = imgData;
+            document.body.appendChild(img.cloneNode(true));
+            images.push(img);
         }
     }
 
-    this.socket.emit('placePlayer', {
-        x: buildings.guild.x,
-        y: buildings.guild.y,
-        type: 'barbarian',
+    spritesheet.addEventListener('error', console.error);
+
+    spritesheet.addEventListener('load', function () {
     });
 }
+
+async function loadMap () {
+    const { tiles } = await fetch('http://localhost:3000/map').then(res => res.json());
+    for (let y = 0; y < tiles.length; y++) {
+        for (let x = 0; x < tiles[0].length; x++) {
+            const spriteID = tiles[y][x];
+            console.log(spriteID);
+            ctx.drawImage(images[spriteID], x * spriteSize, y * spriteSize);
+        }
+    }
+}
+
+loadSpritesheet();
+loadMap();
