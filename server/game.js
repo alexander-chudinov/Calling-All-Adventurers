@@ -11,7 +11,6 @@ class Game {
     };
 
     gameStateUpdate(){
-        console.log(this.players);
         this.io.in(this.roomID).emit("gameStateUpdate", {
             players: this.players,
             buildings: this.buildings
@@ -35,6 +34,10 @@ class Game {
     playerIndex(socketID) {
         return this.players.findIndex(p => p.socketID === socketID);
     }
+    
+    getPlayer(socketID) {
+        return this.players.find(p => p.socketID === socketID);
+    }
 
     removePlayerUsingSocketID(socketID){
         let targetIndex = this.playerIndex(socketID)
@@ -53,6 +56,7 @@ class Game {
             x: 100,
             y: 100,
             hp,
+            defense: 0,
             maxHp: hp,
             direction: 0,
             equipmentID: 426,
@@ -62,6 +66,10 @@ class Game {
         })
         socket.join(this.roomID)
         sockets.push(socket)
+    }
+
+    playerReady (socket) {
+        socket.emit('assignID', { id: socket.id });
         this.gameStateUpdate()
     }
 
@@ -72,14 +80,20 @@ class Game {
     }
 
     playerMove(socketID, x, y){
-        this.players[this.playerIndex(socketID)].x = x
-        this.players[this.playerIndex(socketID)].y = y
+        this.getPlayer(socketID).x = x
+        this.getPlayer(socketID).y = y
         this.gameStateUpdate()
     }
 
     playerAim(socketID, direction){
-        this.players[this.playerIndex(socketID)].direction = direction
+        this.getPlayer(socketID).direction = direction
         this.gameStateUpdate()
+    }
+
+    playerDamage(socketID, amount){
+        const player = this.getPlayer(socketID);
+        player.hp = Math.min(Math.max(player.hp - amount, 0), player.maxHp);
+        this.gameStateUpdate();
     }
 }
 

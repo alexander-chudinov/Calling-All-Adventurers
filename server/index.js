@@ -42,10 +42,14 @@ io.on('connection', (socket) => {
         const { name, fighter } = data;
         console.log(name, fighter);
         game.playerJoin(socket, name, fighter, 0, 0, 100);
+    }).on('ready', () => {
+        game.playerReady(socket);
     }).on('playerMove', ({ x, y }) => {
         game.playerMove(socket.id, x, y)
     }).on('playerAim', ({ direction }) => {
         game.playerAim(socket.id, direction)
+    }).on('playerDamage', ({ damage }) => {
+        game.playerDamage(socket.id, damage)
     }).on('disconnect', () => {
         game.playerLeave(socket)
     });
