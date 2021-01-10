@@ -8332,182 +8332,133 @@ try {
   Function("r", "regeneratorRuntime = r")(runtime);
 }
 
-},{}],"node_modules/vm-browserify/index.js":[function(require,module,exports) {
-var indexOf = function (xs, item) {
-    if (xs.indexOf) return xs.indexOf(item);
-    else for (var i = 0; i < xs.length; i++) {
-        if (xs[i] === item) return i;
+},{}],"node_modules/parcel/src/builtins/bundle-url.js":[function(require,module,exports) {
+var bundleURL = null;
+
+function getBundleURLCached() {
+  if (!bundleURL) {
+    bundleURL = getBundleURL();
+  }
+
+  return bundleURL;
+}
+
+function getBundleURL() {
+  // Attempt to find the URL of the current script and use that as the base URL
+  try {
+    throw new Error();
+  } catch (err) {
+    var matches = ('' + err.stack).match(/(https?|file|ftp|chrome-extension|moz-extension):\/\/[^)\n]+/g);
+
+    if (matches) {
+      return getBaseURL(matches[0]);
     }
-    return -1;
-};
-var Object_keys = function (obj) {
-    if (Object.keys) return Object.keys(obj)
-    else {
-        var res = [];
-        for (var key in obj) res.push(key)
-        return res;
+  }
+
+  return '/';
+}
+
+function getBaseURL(url) {
+  return ('' + url).replace(/^((?:https?|file|ftp|chrome-extension|moz-extension):\/\/.+)\/[^/]+$/, '$1') + '/';
+}
+
+exports.getBundleURL = getBundleURLCached;
+exports.getBaseURL = getBaseURL;
+},{}],"node_modules/parcel/src/builtins/bundle-loader.js":[function(require,module,exports) {
+var getBundleURL = require('./bundle-url').getBundleURL;
+
+function loadBundlesLazy(bundles) {
+  if (!Array.isArray(bundles)) {
+    bundles = [bundles];
+  }
+
+  var id = bundles[bundles.length - 1];
+
+  try {
+    return Promise.resolve(require(id));
+  } catch (err) {
+    if (err.code === 'MODULE_NOT_FOUND') {
+      return new LazyPromise(function (resolve, reject) {
+        loadBundles(bundles.slice(0, -1)).then(function () {
+          return require(id);
+        }).then(resolve, reject);
+      });
     }
-};
 
-var forEach = function (xs, fn) {
-    if (xs.forEach) return xs.forEach(fn)
-    else for (var i = 0; i < xs.length; i++) {
-        fn(xs[i], i, xs);
-    }
-};
+    throw err;
+  }
+}
 
-var defineProp = (function() {
-    try {
-        Object.defineProperty({}, '_', {});
-        return function(obj, name, value) {
-            Object.defineProperty(obj, name, {
-                writable: true,
-                enumerable: false,
-                configurable: true,
-                value: value
-            })
-        };
-    } catch(e) {
-        return function(obj, name, value) {
-            obj[name] = value;
-        };
-    }
-}());
+function loadBundles(bundles) {
+  return Promise.all(bundles.map(loadBundle));
+}
 
-var globals = ['Array', 'Boolean', 'Date', 'Error', 'EvalError', 'Function',
-'Infinity', 'JSON', 'Math', 'NaN', 'Number', 'Object', 'RangeError',
-'ReferenceError', 'RegExp', 'String', 'SyntaxError', 'TypeError', 'URIError',
-'decodeURI', 'decodeURIComponent', 'encodeURI', 'encodeURIComponent', 'escape',
-'eval', 'isFinite', 'isNaN', 'parseFloat', 'parseInt', 'undefined', 'unescape'];
+var bundleLoaders = {};
 
-function Context() {}
-Context.prototype = {};
+function registerBundleLoader(type, loader) {
+  bundleLoaders[type] = loader;
+}
 
-var Script = exports.Script = function NodeScript (code) {
-    if (!(this instanceof Script)) return new Script(code);
-    this.code = code;
-};
+module.exports = exports = loadBundlesLazy;
+exports.load = loadBundles;
+exports.register = registerBundleLoader;
+var bundles = {};
 
-Script.prototype.runInContext = function (context) {
-    if (!(context instanceof Context)) {
-        throw new TypeError("needs a 'context' argument.");
-    }
-    
-    var iframe = document.createElement('iframe');
-    if (!iframe.style) iframe.style = {};
-    iframe.style.display = 'none';
-    
-    document.body.appendChild(iframe);
-    
-    var win = iframe.contentWindow;
-    var wEval = win.eval, wExecScript = win.execScript;
+function loadBundle(bundle) {
+  var id;
 
-    if (!wEval && wExecScript) {
-        // win.eval() magically appears when this is called in IE:
-        wExecScript.call(win, 'null');
-        wEval = win.eval;
-    }
-    
-    forEach(Object_keys(context), function (key) {
-        win[key] = context[key];
+  if (Array.isArray(bundle)) {
+    id = bundle[1];
+    bundle = bundle[0];
+  }
+
+  if (bundles[bundle]) {
+    return bundles[bundle];
+  }
+
+  var type = (bundle.substring(bundle.lastIndexOf('.') + 1, bundle.length) || bundle).toLowerCase();
+  var bundleLoader = bundleLoaders[type];
+
+  if (bundleLoader) {
+    return bundles[bundle] = bundleLoader(getBundleURL() + bundle).then(function (resolved) {
+      if (resolved) {
+        module.bundle.register(id, resolved);
+      }
+
+      return resolved;
+    }).catch(function (e) {
+      delete bundles[bundle];
+      throw e;
     });
-    forEach(globals, function (key) {
-        if (context[key]) {
-            win[key] = context[key];
-        }
-    });
-    
-    var winKeys = Object_keys(win);
+  }
+}
 
-    var res = wEval.call(win, this.code);
-    
-    forEach(Object_keys(win), function (key) {
-        // Avoid copying circular objects like `top` and `window` by only
-        // updating existing context properties or new properties in the `win`
-        // that was only introduced after the eval.
-        if (key in context || indexOf(winKeys, key) === -1) {
-            context[key] = win[key];
-        }
-    });
+function LazyPromise(executor) {
+  this.executor = executor;
+  this.promise = null;
+}
 
-    forEach(globals, function (key) {
-        if (!(key in context)) {
-            defineProp(context, key, win[key]);
-        }
-    });
-    
-    document.body.removeChild(iframe);
-    
-    return res;
+LazyPromise.prototype.then = function (onSuccess, onError) {
+  if (this.promise === null) this.promise = new Promise(this.executor);
+  return this.promise.then(onSuccess, onError);
 };
 
-Script.prototype.runInThisContext = function () {
-    return eval(this.code); // maybe...
+LazyPromise.prototype.catch = function (onError) {
+  if (this.promise === null) this.promise = new Promise(this.executor);
+  return this.promise.catch(onError);
 };
-
-Script.prototype.runInNewContext = function (context) {
-    var ctx = Script.createContext(context);
-    var res = this.runInContext(ctx);
-
-    if (context) {
-        forEach(Object_keys(ctx), function (key) {
-            context[key] = ctx[key];
-        });
-    }
-
-    return res;
-};
-
-forEach(Object_keys(Script.prototype), function (name) {
-    exports[name] = Script[name] = function (code) {
-        var s = Script(code);
-        return s[name].apply(s, [].slice.call(arguments, 1));
-    };
-});
-
-exports.isContext = function (context) {
-    return context instanceof Context;
-};
-
-exports.createScript = function (code) {
-    return exports.Script(code);
-};
-
-exports.createContext = Script.createContext = function (context) {
-    var copy = new Context();
-    if(typeof context === 'object') {
-        forEach(Object_keys(context), function (key) {
-            copy[key] = context[key];
-        });
-    }
-    return copy;
-};
-
-},{}],"js/game.js":[function(require,module,exports) {
+},{"./bundle-url":"node_modules/parcel/src/builtins/bundle-url.js"}],"js/main.js":[function(require,module,exports) {
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports.gameLoop = gameLoop;
-
-var _vm = require("vm");
-
-function gameLoop() {
-  requestAnimationFrame(draw); // gameLoop();
-}
-
-function draw() {
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
-}
-},{"vm":"node_modules/vm-browserify/index.js"}],"js/main.js":[function(require,module,exports) {
-"use strict";
+exports.drawMap = drawMap;
+exports.images = exports.socket = exports.$ = void 0;
 
 var _socket = _interopRequireDefault(require("socket.io-client"));
 
 require("regenerator-runtime/runtime");
-
-var _game = require("./game");
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
@@ -8516,8 +8467,10 @@ function asyncGeneratorStep(gen, resolve, reject, _next, _throw, key, arg) { try
 function _asyncToGenerator(fn) { return function () { var self = this, args = arguments; return new Promise(function (resolve, reject) { var gen = fn.apply(self, args); function _next(value) { asyncGeneratorStep(gen, resolve, reject, _next, _throw, "next", value); } function _throw(err) { asyncGeneratorStep(gen, resolve, reject, _next, _throw, "throw", err); } _next(undefined); }); }; }
 
 var $ = document.querySelector.bind(document);
+exports.$ = $;
 var spriteSize = 16;
 var images = [];
+exports.images = images;
 var canvas = $('canvas');
 var ctx = canvas.getContext('2d');
 canvas.width = 800;
@@ -8527,6 +8480,7 @@ var socket = _socket.default.connect('http://localhost:3000', {
   reconnect: true
 });
 
+exports.socket = socket;
 setInterval(function () {
   return socket.emit('ping');
 }, 2000);
@@ -8536,12 +8490,12 @@ function loadSpritesheet() {
 }
 
 function _loadSpritesheet() {
-  _loadSpritesheet = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee2() {
+  _loadSpritesheet = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee3() {
     var spritesheet, tmp, ctx, y, _loop, x;
 
-    return regeneratorRuntime.wrap(function _callee2$(_context3) {
+    return regeneratorRuntime.wrap(function _callee3$(_context4) {
       while (1) {
-        switch (_context3.prev = _context3.next) {
+        switch (_context4.prev = _context4.next) {
           case 0:
             spritesheet = document.querySelector('img');
             tmp = document.createElement('canvas');
@@ -8551,22 +8505,22 @@ function _loadSpritesheet() {
 
           case 5:
             if (!(y < 22)) {
-              _context3.next = 16;
+              _context4.next = 16;
               break;
             }
 
             _loop = /*#__PURE__*/regeneratorRuntime.mark(function _loop(x) {
               var imgData, img;
-              return regeneratorRuntime.wrap(function _loop$(_context2) {
+              return regeneratorRuntime.wrap(function _loop$(_context3) {
                 while (1) {
-                  switch (_context2.prev = _context2.next) {
+                  switch (_context3.prev = _context3.next) {
                     case 0:
                       ctx.clearRect(0, 0, spriteSize, spriteSize);
                       ctx.drawImage(spritesheet, -x * spriteSize, -y * spriteSize);
                       imgData = tmp.toDataURL();
                       img = new Image();
                       img.src = imgData;
-                      _context2.next = 7;
+                      _context3.next = 7;
                       return new Promise(function (res) {
                         img.addEventListener('load', function () {
                           images.push(img);
@@ -8576,7 +8530,7 @@ function _loadSpritesheet() {
 
                     case 7:
                     case "end":
-                      return _context2.stop();
+                      return _context3.stop();
                   }
                 }
               }, _loop);
@@ -8585,30 +8539,39 @@ function _loadSpritesheet() {
 
           case 8:
             if (!(x < 48)) {
-              _context3.next = 13;
+              _context4.next = 13;
               break;
             }
 
-            return _context3.delegateYield(_loop(x), "t0", 10);
+            return _context4.delegateYield(_loop(x), "t0", 10);
 
           case 10:
             x++;
-            _context3.next = 8;
+            _context4.next = 8;
             break;
 
           case 13:
             y++;
-            _context3.next = 5;
+            _context4.next = 5;
             break;
 
           case 16:
           case "end":
-            return _context3.stop();
+            return _context4.stop();
         }
       }
-    }, _callee2);
+    }, _callee3);
   }));
   return _loadSpritesheet.apply(this, arguments);
+}
+
+function drawMap(tiles) {
+  for (var y = 0; y < tiles.length; y++) {
+    for (var x = 0; x < tiles[0].length; x++) {
+      var spriteID = tiles[y][x];
+      ctx.drawImage(images[spriteID], x * spriteSize, y * spriteSize);
+    }
+  }
 }
 
 function loadMap() {
@@ -8616,37 +8579,30 @@ function loadMap() {
 }
 
 function _loadMap() {
-  _loadMap = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee3() {
-    var _yield$fetch$then, tiles, y, x, spriteID;
+  _loadMap = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee4() {
+    var _yield$fetch$then, tiles;
 
-    return regeneratorRuntime.wrap(function _callee3$(_context4) {
+    return regeneratorRuntime.wrap(function _callee4$(_context5) {
       while (1) {
-        switch (_context4.prev = _context4.next) {
+        switch (_context5.prev = _context5.next) {
           case 0:
-            ctx.fillStyle = '#3d2a17';
-            ctx.fillRect(0, 0, canvas.width, canvas.height);
-            _context4.next = 4;
+            _context5.next = 2;
             return fetch('http://localhost:3000/map/2').then(function (res) {
               return res.json();
             });
 
-          case 4:
-            _yield$fetch$then = _context4.sent;
+          case 2:
+            _yield$fetch$then = _context5.sent;
             tiles = _yield$fetch$then.tiles;
+            drawMap(tiles);
+            return _context5.abrupt("return", tiles);
 
-            for (y = 0; y < tiles.length; y++) {
-              for (x = 0; x < tiles[0].length; x++) {
-                spriteID = tiles[y][x];
-                ctx.drawImage(images[spriteID], x * spriteSize, y * spriteSize);
-              }
-            }
-
-          case 7:
+          case 6:
           case "end":
-            return _context4.stop();
+            return _context5.stop();
         }
       }
-    }, _callee3);
+    }, _callee4);
   }));
   return _loadMap.apply(this, arguments);
 }
@@ -8656,13 +8612,13 @@ function userLoad() {
 }
 
 function _userLoad() {
-  _userLoad = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee4() {
-    return regeneratorRuntime.wrap(function _callee4$(_context5) {
+  _userLoad = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee5() {
+    return regeneratorRuntime.wrap(function _callee5$(_context6) {
       while (1) {
-        switch (_context5.prev = _context5.next) {
+        switch (_context6.prev = _context6.next) {
           case 0:
             $('#join-message').classList.remove('invisible');
-            _context5.next = 3;
+            _context6.next = 3;
             return new Promise(function (res) {
               $('form').addEventListener('submit', function (evt) {
                 evt.preventDefault();
@@ -8678,34 +8634,52 @@ function _userLoad() {
 
           case 3:
           case "end":
-            return _context5.stop();
+            return _context6.stop();
         }
       }
-    }, _callee4);
+    }, _callee5);
   }));
   return _userLoad.apply(this, arguments);
 }
 
-_asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee() {
-  return regeneratorRuntime.wrap(function _callee$(_context) {
+_asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee2() {
+  var initialState;
+  return regeneratorRuntime.wrap(function _callee2$(_context2) {
     while (1) {
-      switch (_context.prev = _context.next) {
+      switch (_context2.prev = _context2.next) {
         case 0:
-          loadSpritesheet().then(loadMap);
-          _context.next = 3;
-          return userLoad();
+          _context2.next = 2;
+          return loadSpritesheet().then(loadMap);
 
-        case 3:
-          (0, _game.gameLoop)();
+        case 2:
+          initialState = _context2.sent;
+          userLoad().then( /*#__PURE__*/_asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee() {
+            return regeneratorRuntime.wrap(function _callee$(_context) {
+              while (1) {
+                switch (_context.prev = _context.next) {
+                  case 0:
+                    _context.next = 2;
+                    return require("_bundle_loader")(require.resolve('./game'));
+
+                  case 2:
+                    _context.sent.init(initialState);
+
+                  case 3:
+                  case "end":
+                    return _context.stop();
+                }
+              }
+            }, _callee);
+          })));
 
         case 4:
         case "end":
-          return _context.stop();
+          return _context2.stop();
       }
     }
-  }, _callee);
+  }, _callee2);
 }))();
-},{"socket.io-client":"node_modules/socket.io-client/build/index.js","regenerator-runtime/runtime":"node_modules/regenerator-runtime/runtime.js","./game":"js/game.js"}],"node_modules/parcel/src/builtins/hmr-runtime.js":[function(require,module,exports) {
+},{"socket.io-client":"node_modules/socket.io-client/build/index.js","regenerator-runtime/runtime":"node_modules/regenerator-runtime/runtime.js","_bundle_loader":"node_modules/parcel/src/builtins/bundle-loader.js","./game":[["game.012fe464.js","js/game.js"],"game.012fe464.js.map","js/game.js"]}],"node_modules/parcel/src/builtins/hmr-runtime.js":[function(require,module,exports) {
 var global = arguments[3];
 var OVERLAY_ID = '__parcel__error__overlay__';
 var OldModule = module.bundle.Module;
@@ -8733,7 +8707,7 @@ var parent = module.bundle.parent;
 if ((!parent || !parent.isParcelRequire) && typeof WebSocket !== 'undefined') {
   var hostname = "" || location.hostname;
   var protocol = location.protocol === 'https:' ? 'wss' : 'ws';
-  var ws = new WebSocket(protocol + '://' + hostname + ':' + "62104" + '/');
+  var ws = new WebSocket(protocol + '://' + hostname + ':' + "62990" + '/');
 
   ws.onmessage = function (event) {
     checkedAssets = {};
@@ -8909,5 +8883,29 @@ function hmrAcceptRun(bundle, id) {
     return true;
   }
 }
-},{}]},{},["node_modules/parcel/src/builtins/hmr-runtime.js","js/main.js"], null)
+},{}],"node_modules/parcel/src/builtins/loaders/browser/js-loader.js":[function(require,module,exports) {
+module.exports = function loadJSBundle(bundle) {
+  return new Promise(function (resolve, reject) {
+    var script = document.createElement('script');
+    script.async = true;
+    script.type = 'text/javascript';
+    script.charset = 'utf-8';
+    script.src = bundle;
+
+    script.onerror = function (e) {
+      script.onerror = script.onload = null;
+      reject(e);
+    };
+
+    script.onload = function () {
+      script.onerror = script.onload = null;
+      resolve();
+    };
+
+    document.getElementsByTagName('head')[0].appendChild(script);
+  });
+};
+},{}],0:[function(require,module,exports) {
+var b=require("node_modules/parcel/src/builtins/bundle-loader.js");b.register("js",require("node_modules/parcel/src/builtins/loaders/browser/js-loader.js"));
+},{}]},{},["node_modules/parcel/src/builtins/hmr-runtime.js",0,"js/main.js"], null)
 //# sourceMappingURL=/main.fb6bbcaf.js.map

@@ -38,6 +38,7 @@ canvas {
     transform: translate(-50%, -50%);
     border: 5px solid white;
     transition: .2s;
+    background: #3d2a17;
 }
 
 input[type="text"] {
