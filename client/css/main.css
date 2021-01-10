@@ -20,7 +20,7 @@ div#join-message {
     transform: translate(-50%, -50%);
 
     padding: 5rem 10rem;
-    
+
     background: url('../assets/parchment.png');
     /* , url('../assets/paper.jpg'); */
     background-repeat: no-repeat;
@@ -85,4 +85,13 @@ button.fighter:hover {
     opacity: 0;
     position: absolute;
     pointer-events: none;
+}
+
+#mac-user-warning{
+    color: white;
+    font-family: Helvetica;
+    position: fixed;
+    padding:10px;
+    top:0px;
+    left:0px;
 }

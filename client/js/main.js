@@ -10,8 +10,9 @@ const canvas = $('canvas');
 const ctx = canvas.getContext('2d');
 canvas.width = 50 * spriteSize;
 canvas.height = 40 * spriteSize;
+const url = "http://localhost:3000"//http://138.68.21.96:3000"
 
-const socket = io.connect('http://localhost:3000', {
+const socket = io.connect(url, {
     reconnect: true
 });
 
@@ -60,7 +61,7 @@ const collisionTypes = {
     healing: 3,
 }
 async function storeCollidables (tiles) {
-    const tileTypes = await fetch('http://localhost:3000/tileTypes').then(r => r.json());
+    const tileTypes = await fetch(url+'/tileTypes').then(r => r.json());
     for (let y = 0; y < tiles.length; y++) {
         collidables.push([]);
         for (let x = 0; x < tiles[0].length; x++) {
@@ -75,7 +76,7 @@ async function storeCollidables (tiles) {
 }
 
 async function loadMap () {
-    const { tiles } = await fetch('http://localhost:3000/map/2').then(res => res.json());
+    const { tiles } = await fetch(url+'/map/2').then(res => res.json());
     drawMap(tiles);
     await storeCollidables(tiles);
     return tiles;
@@ -100,6 +101,9 @@ async function userLoad () {
 
 (async function () {
     const initialState = await loadSpritesheet().then(loadMap);
+    if(!/^((?!chrome|android).)*safari/i.test(navigator.userAgent)) {
+        $("#mac-user-warning").classList.add('invisible');
+    }
     userLoad().then(async function () {
         (await import('./game')).init(initialState);
     });
