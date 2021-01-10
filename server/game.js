@@ -141,7 +141,7 @@ class Game {
                 equipmentID: 323,
             },
             {
-                fighter: "spaceman",
+                fighter: "astronaut",
                 spriteID: 460,
                 attack: 3,
                 maxHp: 80,
