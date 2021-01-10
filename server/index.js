@@ -1,5 +1,5 @@
 var fs = require('fs');
-const { uuid } = require('uuidv4');
+const { v4 } = require('uuid');
 const Game = require('./game')
 const express = require('express');
 const app = express();
@@ -16,7 +16,7 @@ app.get('/', function(req, res, next){
 }).get('/map/:id', (req, res) => {
     res.sendFile(`${__dirname}/data/maps/map${req.params.id}.json`);
 }).post('/newMap', (req,res)=>{
-    fs.appendFile('./data/maps/'+uuid()+'.json', JSON.stringify({
+    fs.appendFile('./data/maps/'+v4()+'.json', JSON.stringify({
         tiles:req.body
     }), function (err) {
         if (err) throw err;
@@ -31,17 +31,18 @@ const io = require('socket.io')(http, {
     }
 });
 
-const game = new Game(uuid(), io)
+const game = new Game(v4(), io)
 
 io.on('connection', (socket) => {
     console.log('a user connected');
 
-    socket.on('playerJoin', (username, fighter, x=0, y=0, hp=10) => {
-        game.playerJoin(socket, username, fighter, x, y, hp)
-    }).on('playerMove', (x,y) => {
+    socket.on('playerJoin', (data) => {
+        const { name, fighter } = data;
+        game.playerJoin(socket, name, fighter, 0, 0, 100);
+    }).on('playerMove', ({ x, y }) => {
         game.playerMove(socket, x, y)
     }).on('disconnect', () => {
-        game.playerLeave(socketID)
+        game.playerLeave(socket);
     });
 
 })

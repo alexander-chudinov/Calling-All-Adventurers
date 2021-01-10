@@ -5,7 +5,7 @@ class Game {
         this.buildings = []
         this.enemies = []
         this.io = io
-        setInterval(() => this.spawnEnemy(20, 0, 0), 20000)
+        // setInterval(() => this.spawnEnemy(20, 0, 0), 20000)
     };
 
     gameStateUpdate(){
@@ -21,8 +21,7 @@ class Game {
         }
         for(let i = 0; i<numberOfEnemies; i++){
             this.enemies.push({
-                x:x,
-                y:y,
+                x, y,
                 spriteID: enemySprite.ghost
             })
         }
@@ -30,12 +29,7 @@ class Game {
     }
 
     playerIndex(socketID){
-        for(let x=0;x<this.players.length;x++){
-            if(this.players[x].socketID===socketID){
-                return x
-            }
-        }
-        return null
+        return this.players.findIndex(p => p.socketID === socketID);
     }
 
     removePlayerUsingSocketID(socketID){
@@ -49,11 +43,8 @@ class Game {
         this.removePlayerUsingSocketID(socket.id)
         this.players.push({
             name: username,
-            fighter: fighterSprite.barbarian,
-            x:x||0,
-            y:y||0,
-            hp:10,
-            socket: socket
+            fighter: fighterSprite[fighter],
+            x, y, hp, socket
         })
         socket.join(this.roomID)
         this.gameStateUpdate()
