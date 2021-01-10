@@ -159,6 +159,8 @@ function registerListeners () {
     });
 }
 
+
+
 export function init(mapState_) {
     mapState = mapState_;
 
@@ -176,6 +178,14 @@ export function init(mapState_) {
         player.id = data.id;
         player.speed = player.maxSpeed = data.speed;
     });
+
+    const showGameOver = () => {
+        $('#game-over').classList.remove('invisible')
+    }
+
+    socket.on('gameOver', function(){
+        showGameOver()
+    })
 }
 
 function gameLoop () {

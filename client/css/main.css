@@ -95,3 +95,13 @@ button.fighter:hover {
     top:0px;
     left:0px;
 }
+
+#game-over{
+    color: white;
+    position: fixed;
+    background: black;
+    width:100%;
+    font-size: 40px;
+    text-align: center;
+    top:45%;
+}

@@ -96,4 +96,14 @@ button.fighter:hover {
     left:0px;
 }
 
+#game-over{
+    color: white;
+    position: fixed;
+    background: black;
+    width:100%;
+    font-size: 40px;
+    text-align: center;
+    top:45%;
+}
+
 /*# sourceMappingURL=/main.c52e0fe2.css.map */
