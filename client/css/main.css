@@ -19,7 +19,7 @@ div#join-message {
     left: 50%;
     transform: translate(-50%, -50%);
 
-    padding: 10rem;
+    padding: 5rem 10rem;
     
     background: url('../assets/parchment.png');
     /* , url('../assets/paper.jpg'); */
@@ -72,6 +72,8 @@ button.fighter {
     outline: none;
     cursor: pointer;
     transition: .2s;
+
+    margin: 10px;
 }
 
 button.fighter:hover {

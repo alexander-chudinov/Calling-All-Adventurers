@@ -127,23 +127,58 @@ class Game {
             {
                 fighter: "barbarian",
                 spriteID: 457,
-                attack: 5,
-                maxHp:100,
-                speed: 3
+                attack: 6,
+                maxHp: 100,
+                speed: 3,
+                equipmentID: 426,
             },
             {
                 fighter: "ninja",
                 spriteID: 462,
-                attack: 2,
-                maxHp:40,
-                speed: 6
+                attack: 4,
+                maxHp: 40,
+                speed: 6,
+                equipmentID: 323,
             },
             {
                 fighter: "spaceman",
                 spriteID: 460,
                 attack: 3,
-                maxHp: 120,
-                speed: 4
+                maxHp: 80,
+                speed: 4,
+                equipmentID: 468,
+            },
+            {
+                fighter: "gunner",
+                spriteID: 25,
+                attack: 8,
+                maxHp: 50,
+                speed: 3,
+                equipmentID: 471,
+            },
+            {
+                fighter: "dog",
+                spriteID: 367,
+                attack: 999,
+                maxHp: 1,
+                speed: 9,
+                equipmentID: 802,
+            },
+            {
+                fighter: "wizard",
+                spriteID: 312,
+                attack: 12,
+                maxHp: 60,
+                speed: 3,
+                equipmentID: (Math.random() > 0.5) + 555,
+            },
+            {
+                fighter: "farmer",
+                spriteID: 127,
+                attack: 2,
+                maxHp: 40,
+                speed: 4,
+                equipmentID: 131,
             }
         ]
 
@@ -162,7 +197,7 @@ class Game {
             defense: 0,
             attack: selectedFighter.attack,
             direction: 0,
-            equipmentID: 426,
+            equipmentID: selectedFighter.equipmentID,
             name: username,
             spriteID: selectedFighter.spriteID,
             socketID: socket.id,
