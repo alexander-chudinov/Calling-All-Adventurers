@@ -31,6 +31,7 @@ async function loadSpritesheet () {
             const imgData = tmp.toDataURL();
             const img = new Image();
             img.src = imgData;
+            img.dataset.spriteID = y * 22 + x;
 
             await new Promise(function (res) {
                 img.addEventListener('load', function () {
@@ -51,9 +52,26 @@ function drawMap (tiles) {
     }
 }
 
+const collidables = [];
+async function storeCollidables (tiles) {
+    const tileTypes = await fetch('http://localhost:3000/tileTypes').then(r => r.json());
+    for (let y = 0; y < tiles.length; y++) {
+        collidables.push([]);
+        for (let x = 0; x < tiles[0].length; x++) {
+            for (const [ type, idxs ] of Object.entries(tileTypes)) {
+                if (idxs.includes(tiles[y][x])) {
+                    collidables[y][x] = type;
+                    break
+                } else collidables[y][x] = false;
+            }
+        }
+    }
+}
+
 async function loadMap () {
     const { tiles } = await fetch('http://localhost:3000/map/2').then(res => res.json());
     drawMap(tiles);
+    await storeCollidables(tiles);
     return tiles;
 }
 
@@ -81,4 +99,4 @@ async function userLoad () {
     });
 })();
 
-export { $, drawMap, socket, images, spriteSize };
+export { $, drawMap, socket, images, spriteSize, collidables };

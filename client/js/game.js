@@ -1,18 +1,17 @@
-import { $, drawMap, socket, images, spriteSize } from './main';
+import { $, drawMap, socket, images, spriteSize, collidables } from './main';
 
 const canvas = $('canvas');
 const ctx = canvas.getContext('2d');
 
-
 let players = [], 
-    mapState = {},
+    mapState = [],
     keys = {},
     player = {
         x: Math.floor(Math.random() * 100),
         y: Math.floor(Math.random() * 100),
         speed: 3,
         direction: 0,
-        maybeMove: function () {
+        maybeMove () {
             const initX = this.x, initY = this.y;
 
             if (keys['KeyW']) this.y -= this.speed;
@@ -26,6 +25,12 @@ let players = [],
             const { x, y } = this;
             if (x !== initX || y !== initY)
                 socket.emit('playerMove', { x, y });
+        },
+        checkCollisions () {
+            const { x, y } = this;
+            
+            const rx = Math.floor(x / spriteSize) * spriteSize;
+            const ry = Math.floor(y / spriteSize) * spriteSize;
         }
     };
 
@@ -46,6 +51,8 @@ export function init(mapState_) {
 
     registerListeners();
     gameLoop();
+
+    console.log(collidables);
     
     socket.on('gameStateUpdate', function (data) {
         players = data.players;
@@ -78,10 +85,11 @@ async function draw () {
         ctx.drawImage(images[equipmentID], ox + Math.cos(direction) * spriteSize, oy + Math.sin(direction) * spriteSize);
 
         // HP
+        // BG
         ctx.fillStyle = '#ff0000';
         ctx.fillRect(x - hpBarWidth / 2, oy - 4, hpBarWidth, 3);
 
-        // HP
+        // FG
         ctx.fillStyle = '#00ff00';
         ctx.fillRect(x - hpBarWidth / 2, oy - 4, hp / maxHp * hpBarWidth, 3);
 
