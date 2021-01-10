@@ -28,8 +28,10 @@ class Game {
         this.buildings = []
         this.enemies = []
         this.io = io
-        setInterval(() => {if(this.remainingPlayers().length>0){this.spawnEnemy(8 * this.players.length)}else{this.enemies=[]}}, 15000)
+        this.progressiveDifficulty = 3
+        setInterval(() => {if(this.remainingPlayers().length>0){this.spawnEnemy(this.progressiveDifficulty * this.players.length)}else{this.enemies=[]}}, 10000)
         setInterval(() => this.moveEnemies(), 1000/30)
+        setInterval(() => {if(this.progressiveDifficulty<9){this.progressiveDifficulty+=2}}, 10000)
     };
 
     gameStateUpdate(){
@@ -69,7 +71,6 @@ class Game {
         for(let i = 0; i < numberOfEnemies; i++){
             let enemy = randomEnemy();
             const grave = this.randElement(graves);
-            console.log(grave);
             this.enemies.push({
                 id: uuidv4(),
                 x: grave[0] * spriteSize,
