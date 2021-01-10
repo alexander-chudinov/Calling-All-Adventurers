@@ -8,8 +8,8 @@ const images = [];
 
 const canvas = $('canvas');
 const ctx = canvas.getContext('2d');
-canvas.width = 800;
-canvas.height = 600;
+canvas.width = 50 * spriteSize;
+canvas.height = 40 * spriteSize;
 
 const socket = io.connect('http://localhost:3000', {
     reconnect: true
@@ -53,6 +53,12 @@ function drawMap (tiles) {
 }
 
 const collidables = [];
+const collisionTypes = {
+    blocking: 0,
+    slowing: 1,
+    damaging: 2,
+    healing: 3,
+}
 async function storeCollidables (tiles) {
     const tileTypes = await fetch('http://localhost:3000/tileTypes').then(r => r.json());
     for (let y = 0; y < tiles.length; y++) {
@@ -60,7 +66,7 @@ async function storeCollidables (tiles) {
         for (let x = 0; x < tiles[0].length; x++) {
             for (const [ type, idxs ] of Object.entries(tileTypes)) {
                 if (idxs.includes(tiles[y][x])) {
-                    collidables[y][x] = type;
+                    collidables[y][x] = collisionTypes[type];
                     break
                 } else collidables[y][x] = false;
             }

@@ -7,38 +7,77 @@ let players = [],
     mapState = [],
     keys = {},
     player = {
-        x: Math.floor(Math.random() * 100),
-        y: Math.floor(Math.random() * 100),
+        id: '',
+        x: 0,
+        y: 0,
         speed: 3,
         direction: 0,
+        equipX: 0,
+        equipY: 0,
         maybeMove () {
             const initX = this.x, initY = this.y;
 
-            if (keys['KeyW']&&!this.checkCollisions(2,1)) this.y -= this.speed;
-            if (keys['KeyS']&&!this.checkCollisions(0,1)) this.y += this.speed;
-            if (keys['KeyA']&&!this.checkCollisions(1,0)) this.x -= this.speed;
-            if (keys['KeyD']&&!this.checkCollisions(1,2)) this.x += this.speed;
+            const colMatr = this.checkCollisions();
 
-            this.x = Math.min(Math.max(this.x, 0), canvas.width);
-            this.y = Math.min(Math.max(this.y, 0), canvas.height);
+            if (keys['KeyW'] && colMatr[2][1] !== 0) this.y -= this.speed;
+            if (keys['KeyS'] && colMatr[0][1] !== 0) this.y += this.speed;
+            if (keys['KeyA'] && colMatr[1][0] !== 0) this.x -= this.speed;
+            if (keys['KeyD'] && colMatr[1][2] !== 0) this.x += this.speed;
+
+            this.x = Math.min(Math.max(this.x, spriteSize), canvas.width - spriteSize);
+            this.y = Math.min(Math.max(this.y, spriteSize), canvas.height - spriteSize);
 
             const { x, y } = this;
             if (x !== initX || y !== initY)
                 socket.emit('playerMove', { x, y });
         },
-        checkCollisions (x_check, y_check) {
+        maybeApplyEffects () {
+            const xIndex = Math.floor(this.x / spriteSize);
+            const yIndex = Math.floor(this.y / spriteSize);
+            
+            const effect = collidables[yIndex][xIndex];
+            if (effect === 1) {
+                this.speed = 1.5;
+            } else {
+                this.speed = 3;
+                if (effect === 0) {
+                    // player is somehow inside of a block
+                    this.x += spriteSize;
+                    this.y += spriteSize;
+                } else if (effect === 2) {
+                    // damaging
+                    socket.emit('playerDamage', {  damage: 1 });
+                } else if (effect === 3) {
+                    // healing
+                    socket.emit('playerDamage', { damage: -1 });
+                }
+            }
+        },
+        maybeDamagePlayer() {
+            for (const player of players) {
+                console.log(player.socketID + ' | ' + this.id);
+                if (
+                    player.socketID !== this.id &&
+                    Math.sqrt(
+                        (this.x - player.equipX) ** 2 +
+                        (this.y - player.equipY) ** 2
+                    ) <= spriteSize
+                ) {
+                    socket.emit('playerDamage', { damage: 1 });
+                }
+            }
+        },
+        checkCollisions () {
             try{
                 const { x, y } = this;
 
                 const x_index = Math.floor(x / spriteSize);
                 const y_index = Math.floor(y / spriteSize);
 
-                // const rx = x_index * spriteSize;
-                // const ry = y_index * spriteSize;
                 const colMatr = [
-                    [null,  null,                        null],
-                    [null,  collidables[y_index][x_index],  null],
-                    [null,  null,                        null]
+                    [null, null,                            null],
+                    [null, collidables[y_index][x_index],   null],
+                    [null, null,                            null]
                 ]
 
                 // Valid directions
@@ -95,10 +134,9 @@ let players = [],
                     colMatr[2][0] = collidables[y_index-1][x_index-1]
                 }
 
-                return colMatr[x_check][y_check]
-            } catch{
-                return false
-            }
+                return colMatr
+            } catch { }
+            return false
         }
     };
 
@@ -122,13 +160,22 @@ export function init(mapState_) {
 
     console.log(collidables);
 
+    socket.emit('ready');
+
     socket.on('gameStateUpdate', function (data) {
         players = data.players;
+    });
+
+    socket.on('assignID', function (data) {
+        player.id = data.id;
     });
 }
 
 function gameLoop () {
     player.maybeMove();
+    player.maybeApplyEffects();
+    player.maybeDamagePlayer();
+
     draw();
 
     requestAnimationFrame(gameLoop);
@@ -150,7 +197,10 @@ async function draw () {
         ctx.drawImage(images[spriteID], ox, oy);
         const offset = ctx.measureText(name).width / 2
 
-        ctx.drawImage(images[equipmentID], ox + Math.cos(direction) * spriteSize, oy + Math.sin(direction) * spriteSize);
+        player.equipX = ox - 2 + Math.cos(direction) * spriteSize;
+        player.equipY = oy - 2 + Math.sin(direction) * spriteSize;
+
+        ctx.drawImage(images[equipmentID], player.equipX, player.equipY);
 
         // HP
         // BG
