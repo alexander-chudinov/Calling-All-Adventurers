@@ -25,7 +25,11 @@ app.get('/', function(req, res, next){
 });
 
 const http = require('http').Server(app);
-const io = require('socket.io')(http);
+const io = require('socket.io')(http, {
+    cors: {
+        origin: '*'
+    }
+});
 
 io.on('connection', (socket) => {
     console.log('a user connected');
