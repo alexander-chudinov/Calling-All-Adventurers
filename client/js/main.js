@@ -1,6 +1,5 @@
 import io from 'socket.io-client';
 import 'regenerator-runtime/runtime';
-import { gameLoop } from './game';
 
 const $ = document.querySelector.bind(document);
 
@@ -43,17 +42,19 @@ async function loadSpritesheet () {
     }
 }
 
-async function loadMap () {
-    ctx.fillStyle = '#3d2a17';
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-    const { tiles } = await fetch('http://localhost:3000/map/2').then(res => res.json());
+function drawMap (tiles) {
     for (let y = 0; y < tiles.length; y++) {
         for (let x = 0; x < tiles[0].length; x++) {
             const spriteID = tiles[y][x];
             ctx.drawImage(images[spriteID], x * spriteSize, y * spriteSize);
         }
     }
+}
+
+async function loadMap () {
+    const { tiles } = await fetch('http://localhost:3000/map/2').then(res => res.json());
+    drawMap(tiles);
+    return tiles;
 }
 
 async function userLoad () {
@@ -74,7 +75,10 @@ async function userLoad () {
 }
 
 (async function () {
-    loadSpritesheet().then(loadMap);
-    await userLoad();
-    gameLoop();
+    const initialState = await loadSpritesheet().then(loadMap);
+    userLoad().then(async function () {
+        (await import('./game')).init(initialState);
+    });
 })();
+
+export { $, drawMap, socket, images };
