@@ -19,7 +19,7 @@ class Game {
         this.buildings = []
         this.enemies = []
         this.io = io
-        setInterval(() => this.spawnEnemy(5), 20000)
+        setInterval(() => {if(this.remainingPlayers().length>0){this.spawnEnemy(5)}else{this.enemies=[]}}, 20000)
         setInterval(() => this.moveEnemies(), 1000/30)
     };
 
@@ -75,9 +75,13 @@ class Game {
         this.gameStateUpdate()
     }
 
+    remainingPlayers(){
+        return this.players.filter(p => p.hp > 0)
+    }
+
     moveEnemies(){
         for(const enemy of this.enemies){
-            if(enemy.targetPlayerIndex === null) continue;
+            if(enemy.targetPlayerIndex === -1) continue;
             if(this.players[enemy.targetPlayerIndex]){
                 let { x, y } = this.players[enemy.targetPlayerIndex];
                 const dx = enemy.x - x;
@@ -93,7 +97,7 @@ class Game {
                     if(remainingPlayers.length>0){
                         enemy.targetPlayerIndex = this.players.indexOf(this.randElement(remainingPlayers))
                     } else {
-                        enemy.targetPlayerIndex = null;
+                        enemy.targetPlayerIndex = -1;
                         angle = Math.atan2(dy, dx)
                     }
                 }
