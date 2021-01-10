@@ -8352,7 +8352,14 @@ var canvas = $('canvas');
 var ctx = canvas.getContext('2d');
 canvas.width = 800;
 canvas.height = 600;
-var socket = (0, _socket.default)();
+
+var socket = _socket.default.connect('http://localhost:3000', {
+  reconnect: true
+});
+
+setInterval(function () {
+  return socket.emit('ping');
+}, 2000);
 
 function loadSpritesheet() {
   return _loadSpritesheet.apply(this, arguments);
@@ -8503,7 +8510,7 @@ var parent = module.bundle.parent;
 if ((!parent || !parent.isParcelRequire) && typeof WebSocket !== 'undefined') {
   var hostname = "" || location.hostname;
   var protocol = location.protocol === 'https:' ? 'wss' : 'ws';
-  var ws = new WebSocket(protocol + '://' + hostname + ':' + "58763" + '/');
+  var ws = new WebSocket(protocol + '://' + hostname + ':' + "61154" + '/');
 
   ws.onmessage = function (event) {
     checkedAssets = {};
