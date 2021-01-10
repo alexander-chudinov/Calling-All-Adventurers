@@ -24,5 +24,26 @@
     - Players respawn here
 
 
-## Events/
--
+## Events
+- playerJoin (client -> server)
+    - name
+    - fighter
+- playerMove (client -> server)
+    - x
+    - y
+- spawnEnemy (server only, happens once every X seconds)
+    - updateEnemies (arrow of:)
+        - spriteID
+        - x
+        - y
+- playerAction (TODO)
+- gameStateUpdate (server -> client)
+    - players (array of:)
+        - x 
+        - y
+        - fighter
+        - name
+    - buildings (array of:)
+        - name
+        - hp
+    
