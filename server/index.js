@@ -44,6 +44,8 @@ io.on('connection', (socket) => {
         game.playerJoin(socket, name, fighter, 0, 0, 100);
     }).on('playerMove', ({ x, y }) => {
         game.playerMove(socket.id, x, y)
+    }).on('playerAim', ({ direction }) => {
+        game.playerAim(socket.id, direction)
     }).on('disconnect', () => {
         game.playerLeave(socket)
     });
