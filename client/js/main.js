@@ -67,7 +67,7 @@ async function storeCollidables (tiles) {
             for (const [ type, idxs ] of Object.entries(tileTypes)) {
                 if (idxs.includes(tiles[y][x])) {
                     collidables[y][x] = collisionTypes[type];
-                    break
+                    break;
                 } else collidables[y][x] = false;
             }
         }
