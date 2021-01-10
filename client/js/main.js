@@ -11,7 +11,9 @@ const ctx = canvas.getContext('2d');
 canvas.width = 800;
 canvas.height = 600;
 
-const socket = io();
+const socket = io.connect('http://localhost:3000', {reconnect: true});
+
+setInterval(() => socket.emit('ping'), 2000)
 
 async function loadSpritesheet () {
     const spritesheet = document.querySelector('img');
