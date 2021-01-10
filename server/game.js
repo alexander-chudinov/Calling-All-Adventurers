@@ -1,3 +1,5 @@
+const sockets = []
+
 class Game {
     constructor(roomID, io){
         this.roomID = roomID
@@ -33,7 +35,9 @@ class Game {
     }
 
     removePlayerUsingSocketID(socketID){
-        this.players.splice(this.playerIndex(socketID));
+        let targetIndex = this.playerIndex(socketID)
+        this.players.splice(targetIndex);
+        sockets.splice(targetIndex);
     }
 
     playerJoin(socket, username, fighter, x, y, hp){
@@ -44,9 +48,11 @@ class Game {
         this.players.push({
             name: username,
             fighter: fighterSprite[fighter],
-            x, y, hp, socket
+            socketID: socket.id,
+            x, y, hp
         })
         socket.join(this.roomID)
+        sockets.push(socket)
         this.gameStateUpdate()
     }
 
@@ -56,9 +62,9 @@ class Game {
         this.gameStateUpdate()
     }
 
-    playerMove(socket, x, y){
-        this.players[this.playerIndex(socket.id)].x = x
-        this.players[this.playerIndex(socket.id)].y = y
+    playerMove(socketID, x, y){
+        this.players[this.playerIndex(socketID)].x = x
+        this.players[this.playerIndex(socketID)].y = y
         this.gameStateUpdate()
     }
 }

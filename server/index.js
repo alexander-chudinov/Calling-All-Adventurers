@@ -40,9 +40,9 @@ io.on('connection', (socket) => {
         const { name, fighter } = data;
         game.playerJoin(socket, name, fighter, 0, 0, 100);
     }).on('playerMove', ({ x, y }) => {
-        game.playerMove(socket, x, y)
+        game.playerMove(socket.id, x, y)
     }).on('disconnect', () => {
-        game.playerLeave(socket);
+        game.playerLeave(socket)
     });
 
 })
